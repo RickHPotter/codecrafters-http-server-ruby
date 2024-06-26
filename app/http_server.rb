@@ -29,6 +29,8 @@ class HttpServer
                    routes.handle_user_agent
                  in ["GET", "/files"]
                    routes.handle_files
+                 in ["POST", "/files"]
+                   routes.handle_files_creation
                  else
                    routes.handle_not_found
                  end

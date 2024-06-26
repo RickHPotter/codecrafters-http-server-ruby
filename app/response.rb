@@ -9,7 +9,7 @@ class Response
               :body
 
   VERSION = "HTTP/1.1"
-  STATUS_MESSAGE = { "200": "OK", "404": "Not Found", "500": "Internal Server Error" }.freeze
+  STATUS_MESSAGE = { "200": "OK", "201": "Created", "404": "Not Found", "500": "Internal Server Error" }.freeze
 
   def initialize(status_code, body = nil, additional_headers = {})
     @version        = VERSION

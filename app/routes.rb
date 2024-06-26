@@ -30,12 +30,23 @@ class Routes
   def handle_files
     case [request.paths]
     in [["/files", filename]]
-
       file = File.join(DIRECTORY_PATH, filename)
       content = File.read(file) if File.file?(file)
       return handle_not_found if content.nil?
 
       Response.new("200", content, { content_type: "application/octet-stream" }).response
+    else
+      handle_not_found
+    end
+  end
+
+  def handle_files_creation
+    case [request.paths]
+    in [["/files", filename]]
+      file = File.join(DIRECTORY_PATH, filename)
+      File.open(file, "w") { |f| f.write(request.body) }
+
+      Response.new("201").response
     else
       handle_not_found
     end

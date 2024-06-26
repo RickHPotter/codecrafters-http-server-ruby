@@ -1,18 +1,24 @@
 # frozen_string_literal: true
 
 require "socket"
+require_relative "request"
 
-print("Logs from your program will appear here!")
+puts "Logs from your program will appear here!"
 
 server = TCPServer.new("localhost", 4221)
 
-# An HTTP response is made up of three parts, each separated by a CRLF (\r\n):
-#
-# Status line. => HTTP/1.1 200 OK
-# Zero or more headers, each ending with a CRLF.
-# Optional response body.
+loop do
+  client = server.accept
+  request = Request.new(client.recvmsg)
 
-client = server.accept
-client.puts "HTTP/1.1 200 OK\r\n\r\n"
+  response = case request.path
+             when "/"
+               "HTTP/1.1 200 OK\r\n\r\n"
+             else
+               "HTTP/1.1 404 Not Found\r\n\r\n"
+             end
 
-client.close
+  client.puts response
+
+  client.close
+end

@@ -2,6 +2,7 @@
 
 require "socket"
 require_relative "request"
+require_relative "response"
 
 puts "Logs from your program will appear here!"
 
@@ -11,11 +12,13 @@ loop do
   client = server.accept
   request = Request.new(client.recvmsg)
 
-  response = case request.path
-             when "/"
-               "HTTP/1.1 200 OK\r\n\r\n"
+  response = case request.paths[0]
+             when ""
+               Response.new(request.version, "200", "OK").response
+             when "echo"
+               Response.new(request.version, "200", "OK", {}, request.paths[1]).response
              else
-               "HTTP/1.1 404 Not Found\r\n\r\n"
+               Response.new(request.version, "404", "Not Found").response
              end
 
   client.puts response

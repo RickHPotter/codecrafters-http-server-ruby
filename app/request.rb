@@ -28,12 +28,11 @@ class Request
     @user_agent, array_of_headers = array_of_headers.partition { |header| header.start_with?("User-Agent: ") }
     @accept, leftovers            = array_of_headers.partition { |header| header.start_with?("Accept: ") }
 
-    @headers = {
-      host: @full_host.first.gsub("Host: ", ""),
-      user_agent: @user_agent.first.gsub("User-Agent: ", ""),
-      accept: @accept.first.gsub("Accept: ", "")
-    }
-    @headers.merge!(leftovers:) unless leftovers.empty?
+    @headers = {}
+    @headers.merge!(host: @full_host.first.gsub("Host: ", ""))              if @full_host.first
+    @headers.merge!(user_agent: @user_agent.first.gsub("User-Agent: ", "")) if @user_agent.first
+    @headers.merge!(accept: @accept.first.gsub("Accept: ", ""))             if @accept.first
+    @headers.merge!(leftovers:)                                             if leftovers.size.positive?
 
     @host, @port = @headers[:host].split(":")
     @user_agent  = @headers[:user_agent]
@@ -41,8 +40,9 @@ class Request
   end
 
   def dissect_path
-    @path = @path[1..] if @path.start_with?("/")
+    @path = @path[..-1] if @path.end_with?("/")
     @path, @params = @path.split("?")
-    @paths = @path.split("/")
+    @paths = @path[1..].split("/")
+    @paths[0] = "/#{@paths[0]}"
   end
 end

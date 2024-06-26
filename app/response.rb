@@ -8,10 +8,13 @@ class Response
               :headers, :content_type, :content_length,
               :body
 
-  def initialize(version, status_code, status_message, additional_headers = {}, body = nil)
-    @version        = version
+  VERSION = "HTTP/1.1"
+  STATUS_MESSAGE = { "200": "OK", "404": "Not Found", "500": "Internal Server Error" }.freeze
+
+  def initialize(status_code, body = nil, additional_headers = {})
+    @version        = VERSION
     @status_code    = status_code
-    @status_message = status_message
+    @status_message = STATUS_MESSAGE[status_code.to_sym]
     @other_headers  = additional_headers
     @body           = CGI.unescape(body) if body
 

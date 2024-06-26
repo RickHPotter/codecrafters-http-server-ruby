@@ -12,12 +12,15 @@ loop do
 
   routes = Routes.new(request: client.recvmsg)
   paths = routes.request.paths
+  verb = routes.request.verb
 
-  response = case paths[0]
-             when "/"
+  response = case [verb, paths[0]]
+             in ["GET", "/"]
                routes.handle_home
-             when "/echo"
+             in ["GET", "/echo"]
                routes.handle_echo
+             in ["GET", "/user-agent"]
+               routes.handle_user_agent
              else
                routes.handle_not_found
              end

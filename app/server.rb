@@ -1,31 +1,7 @@
 # frozen_string_literal: true
 
-require "socket"
-require_relative "routes"
+require_relative "http_server"
 
-puts "Logs from your program will appear here!"
+DIRECTORY_PATH = ARGV[ARGV.index("--directory") + 1] if ARGV.include?("--directory")
 
-server = TCPServer.new("localhost", 4221)
-
-loop do
-  client = server.accept
-
-  routes = Routes.new(request: client.recvmsg)
-  paths = routes.request.paths
-  verb = routes.request.verb
-
-  response = case [verb, paths[0]]
-             in ["GET", "/"]
-               routes.handle_home
-             in ["GET", "/echo"]
-               routes.handle_echo
-             in ["GET", "/user-agent"]
-               routes.handle_user_agent
-             else
-               routes.handle_not_found
-             end
-
-  client.puts response
-
-  client.close
-end
+HttpServer.new("localhost", 4221).listen

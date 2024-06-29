@@ -4,27 +4,28 @@ require_relative "request"
 require_relative "response"
 
 class Routes
-  attr_accessor :request
+  attr_accessor :request, :request_headers
 
   def initialize(request:)
     @request = Request.new(request)
+    @request_headers = @request.headers
   end
 
   def handle_home
-    Response.new("200").response
+    Response.new("200", request_headers).response
   end
 
   def handle_echo
     case [request.paths]
     in [["/echo", message]]
-      Response.new("200", message).response
+      Response.new("200", request_headers, message).response
     else
       handle_not_found
     end
   end
 
   def handle_user_agent
-    Response.new("200", request.user_agent).response
+    Response.new("200", request_headers, request.user_agent).response
   end
 
   def handle_files
@@ -34,7 +35,7 @@ class Routes
       content = File.read(file) if File.file?(file)
       return handle_not_found if content.nil?
 
-      Response.new("200", content, { content_type: "application/octet-stream" }).response
+      Response.new("200", request_headers, content, { content_type: "application/octet-stream" }).response
     else
       handle_not_found
     end
@@ -46,13 +47,13 @@ class Routes
       file = File.join(DIRECTORY_PATH, filename)
       File.open(file, "w") { |f| f.write(request.body) }
 
-      Response.new("201").response
+      Response.new("201", request_headers).response
     else
       handle_not_found
     end
   end
 
   def handle_not_found
-    Response.new("404").response
+    Response.new("404", request_headers).response
   end
 end

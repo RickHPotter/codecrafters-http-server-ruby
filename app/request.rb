@@ -26,13 +26,16 @@ class Request
   def dissect_headers(array_of_headers)
     @full_host, array_of_headers  = array_of_headers.partition { |header| header.start_with?("Host: ") }
     @user_agent, array_of_headers = array_of_headers.partition { |header| header.start_with?("User-Agent: ") }
-    @accept, leftovers            = array_of_headers.partition { |header| header.start_with?("Accept: ") }
+    @accept, array_of_headers     = array_of_headers.partition { |header| header.start_with?("Accept: ") }
+    @accept_encoding, leftovers   = array_of_headers.partition { |header| header.start_with?("Accept-Encoding: ") }
 
-    @headers = {}
-    @headers.merge!(host: @full_host.first.gsub("Host: ", ""))              if @full_host.first
-    @headers.merge!(user_agent: @user_agent.first.gsub("User-Agent: ", "")) if @user_agent.first
-    @headers.merge!(accept: @accept.first.gsub("Accept: ", ""))             if @accept.first
-    @headers.merge!(leftovers:)                                             if leftovers.size.positive?
+    @headers = {
+      host: trim_header(@full_host),
+      user_agent: trim_header(@user_agent),
+      accept: trim_header(@accept),
+      accept_encoding: trim_header(@accept_encoding),
+      leftovers:
+    }.compact
 
     @host, @port = @headers[:host].split(":")
     @user_agent  = @headers[:user_agent]
@@ -44,5 +47,9 @@ class Request
     @path, @params = @path.split("?")
     @paths = @path[1..].split("/")
     @paths[0] = "/#{@paths[0]}"
+  end
+
+  def trim_header(header)
+    header&.first&.split(": ")&.drop(1)&.join(":")
   end
 end

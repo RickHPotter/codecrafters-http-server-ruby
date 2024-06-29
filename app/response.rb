@@ -11,12 +11,13 @@ class Response
   VERSION = "HTTP/1.1"
   STATUS_MESSAGE = { "200": "OK", "201": "Created", "404": "Not Found", "500": "Internal Server Error" }.freeze
 
-  def initialize(status_code, body = nil, additional_headers = {})
-    @version        = VERSION
-    @status_code    = status_code
-    @status_message = STATUS_MESSAGE[status_code.to_sym]
-    @other_headers  = additional_headers
-    @body           = CGI.unescape(body) if body
+  def initialize(status_code, request_headers, body = nil, additional_headers = {})
+    @version         = VERSION
+    @status_code     = status_code
+    @status_message  = STATUS_MESSAGE[status_code.to_sym]
+    @other_headers   = additional_headers
+    @body            = CGI.unescape(body) if body
+    @request_headers = request_headers
 
     generate_headers
     generate_response
@@ -28,10 +29,17 @@ class Response
 
     @headers << "Content-Type: #{@other_headers.fetch(:content_type, 'text/plain')}"
     @headers << "Content-Length: #{@other_headers.fetch(:content_length, body.length)}"
+    @headers << "Content-Encoding: #{@other_headers.fetch(:content_encoding, 'gzip')}" if compression?
   end
 
   def generate_response
     @response_line = "#{version} #{status_code} #{status_message}"
     @response = [response_line, *headers, "\r\n#{body}"].join("\r\n")
+  end
+
+  private
+
+  def compression?
+    @request_headers.include?(:accept_encoding) && %w[gzip].include?(@request_headers[:accept_encoding])
   end
 end

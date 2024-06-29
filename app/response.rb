@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "cgi"
+require "stringio"
+require "zlib"
 
 class Response
   attr_reader :response,
@@ -20,6 +22,8 @@ class Response
     @body            = CGI.unescape(body) if body
     @request_headers = request_headers
 
+    compress_body if compression?
+
     generate_headers
     generate_response
   end
@@ -29,7 +33,7 @@ class Response
     return unless body
 
     @headers << "Content-Type: #{@other_headers.fetch(:content_type, 'text/plain')}"
-    @headers << "Content-Length: #{@other_headers.fetch(:content_length, body.length)}"
+    @headers << "Content-Length: #{@body.bytesize}"
     @headers << "Content-Encoding: #{preferred_encoding}" if compression?
   end
 
@@ -46,5 +50,14 @@ class Response
 
   def preferred_encoding
     ACCEPTED_ENCODINGS.find { |encoding| @request_headers[:accept_encoding].include?(encoding) }
+  end
+
+  def compress_body
+    io = StringIO.new
+    gzip = Zlib::GzipWriter.new(io)
+    gzip.write(@body)
+    gzip.close
+
+    @body = io.string
   end
 end

@@ -10,6 +10,7 @@ class Response
 
   VERSION = "HTTP/1.1"
   STATUS_MESSAGE = { "200": "OK", "201": "Created", "404": "Not Found", "500": "Internal Server Error" }.freeze
+  ACCEPTED_ENCODINGS = %w[gzip].freeze
 
   def initialize(status_code, request_headers, body = nil, additional_headers = {})
     @version         = VERSION
@@ -29,7 +30,7 @@ class Response
 
     @headers << "Content-Type: #{@other_headers.fetch(:content_type, 'text/plain')}"
     @headers << "Content-Length: #{@other_headers.fetch(:content_length, body.length)}"
-    @headers << "Content-Encoding: #{@other_headers.fetch(:content_encoding, 'gzip')}" if compression?
+    @headers << "Content-Encoding: #{preferred_encoding}" if compression?
   end
 
   def generate_response
@@ -40,6 +41,10 @@ class Response
   private
 
   def compression?
-    @request_headers.include?(:accept_encoding) && %w[gzip].include?(@request_headers[:accept_encoding])
+    @request_headers.include?(:accept_encoding)
+  end
+
+  def preferred_encoding
+    ACCEPTED_ENCODINGS.find { |encoding| @request_headers[:accept_encoding].include?(encoding) }
   end
 end

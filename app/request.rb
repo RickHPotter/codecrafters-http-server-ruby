@@ -33,7 +33,7 @@ class Request
       host: trim_header(@full_host),
       user_agent: trim_header(@user_agent),
       accept: trim_header(@accept),
-      accept_encoding: trim_header(@accept_encoding),
+      accept_encoding: trim_header(@accept_encoding)&.split(", "),
       leftovers:
     }.compact
 
